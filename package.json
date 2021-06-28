@@ -1,0 +1,35 @@
+{
+    "name": "app.errorlog",
+    "version": "1.0.0",
+    "description": "Модуль для красивого вывода стека ошибок в консоль.",
+    "contributors": [
+        {
+            "name": "Sergei",
+            "email": "classtype@mail.ru"
+        }
+    ],
+    "main": "src/app.errorlog.js",
+    "homepage": "http://github.com/classtype/app.errorlog",
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/classtype/app.errorlog.git"
+    },
+    "bugs": {
+        "url": "http://github.com/classtype/app.errorlog/issues"
+    },
+    "licenses": [
+        {
+            "type": "MIT",
+            "url": "http://github.com/classtype/app.errorlog/blob/master/LICENSE"
+        }
+    ],
+    "keywords": [
+        "error",
+        "stack",
+        "console"
+    ],
+    "dependencies": {
+        "colors": "1.4.0",
+        "stack-trace": "0.0.10"
+    }
+}
