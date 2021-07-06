@@ -21,7 +21,7 @@ obj.noInitMethod = function() {
 
 Результат в консоли:
 
-![](https://github.com/classtype/app.errorlog/raw/master/examples/sample.png)
+![](https://github.com/classtype/app.errorlog/raw/master/examples/example.png)
 
 ## Установка
 
