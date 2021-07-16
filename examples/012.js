@@ -1,5 +1,5 @@
 
 
-        new Promise();
+    function changeBackgroundColor (newColor{
     
     

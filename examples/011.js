@@ -1,5 +1,5 @@
 
 
-var greeting = "Welcome to my website!
+    function changeBackgroundColor newColor) {
     
     

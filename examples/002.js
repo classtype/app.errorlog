@@ -1,5 +1,5 @@
 const fs = require('fs');
     
-        fs.readlinkSync('link_no_found');
+        fs.readdirSync('dir_no_found');
         
             

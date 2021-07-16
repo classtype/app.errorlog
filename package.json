@@ -1,6 +1,6 @@
 {
     "name": "app.errorlog",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "description": "Модуль для красивого вывода стека ошибок в консоль.",
     "contributors": [
         {
@@ -29,6 +29,7 @@
         "console"
     ],
     "dependencies": {
+        "app.columns": "1.0.1",
         "colors": "1.4.0",
         "stack-trace": "0.0.10"
     }

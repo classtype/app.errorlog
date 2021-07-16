@@ -3,47 +3,87 @@
 const fs = require('fs');
 const colors = require('colors/safe');
 const stackTrace = require('stack-trace');
+const columns = require('app.columns');
 
 /*--------------------------------------------------------------------------------------------------
 |
-| -> Выводит ошибку в консоль
+| -> Сообщение об ошибке
 |
 |-------------------------------------------------------------------------------------------------*/
 
-const errorlog = (message, fileName, lineNumber, columnNumber) => {
-// Приводим к числу
-    lineNumber -= 0;
-    columnNumber -= 0;
-    
-    let str1 = '';
-    let str2 = '';
-    let str3 = '';
-    
-    if (message.length >= fileName.length) {
-        str1 = new Array((message.length - fileName.length) + fileName.length + 5).join(' ');
-        str3 = new Array(message.length - fileName.length + 1).join(' ');
+const error_msg = (message, fileName, error) => {
+// Сообщение не задано
+    if (message == '') {
+        return columns([
+            ['Путь:', '"'+fileName+'"']
+        ], {
+            color: ['red', 'black'],
+            align: ['right', 'left']
+        });
     }
     
-    else {
-        str1 = new Array(fileName.length + 5).join(' ');
-        str2 = new Array(fileName.length - message.length + 1).join(' ');
+// Модуль не найден
+    if (message.substring(0, 17) == 'Модуль не найден:'
+    ||  message.substring(0, 18) == 'Cannot find module') {
+        //let msg = message.split("'");
+        let stack = (error ? error.message.split('\n') : []);
+        let p = [
+            //['Ошибка:', msg[0].substring(0, msg[0].length - 1)+':'],
+            ['Ошибка:', 'Модуль не найден:'],
+            [     '\n', "\n'"+message.split("'")[1]+"'"]
+        ];
+        
+        if (stack.length > 3) {
+            p.push(['\n', '\n']);
+            //p.push(['\n', '\nRequire stack:']);
+            p.push(['\n', '\nЦепочка вызовов:']);
+            
+            for (let i = 2; i < stack.length; i++) {
+                p.push(['\n', "\n'"+stack[i].split('- ')[1]+"'"]);
+            }
+        }
+        
+        p.push(['Путь:', '"'+fileName+'"']);
+        
+        return columns(p, {
+            color: ['red', 'black'],
+            align: ['right', 'left']
+        });
     }
     
-// Содержимое ошибки
-    console.log(
-        colors.bgRed('         ') + colors.bgBlack(str1 + '\n') +
-        colors.bgRed(' Ошибка: ') +
-        colors.bgBlack(' "'+message+'" ' + str2 + '\n') + 
-        colors.bgRed('         ') + colors.bgBlack(str1)
-    );
+// Файл или каталог не найден
+    if (message.substring(0, 33) == 'ENOENT: no such file or directory') {
+        //let msg = message.split("'");
+        log += columns([
+            //['Ошибка:', msg[0].substring(0, msg[0].length - 1)+':'],
+            ['Ошибка:', 'Файл или каталог не найден:'],
+            [     '\n', "\n'"+message.split("'")[1]+"'"],
+            [  'Путь:', '"'+fileName+'"']
+        ], {
+            color: ['red', 'black'],
+            align: ['right', 'left']
+        });
+    }
     
-// Имя файла с ошибкой
-    console.log(
-        colors.bgRed('   Путь: ') +
-        colors.bgBlack(' "'+fileName+'" ' + str3 + '\n') +
-        colors.bgRed('         ') + colors.bgBlack(str1)
-    );
+// Стандартное сообщение
+    return columns([
+        ['Ошибка:', '"'+message+'"'],
+        [  'Путь:', '"'+fileName+'"']
+    ], {
+        color: ['red', 'black'],
+        align: ['right', 'left']
+    });
     
+    return log;
+};
+
+/*--------------------------------------------------------------------------------------------------
+|
+| -> Выделение ошибки в файле
+|
+|-------------------------------------------------------------------------------------------------*/
+
+const highlight = (fileName, lineNumber, columnStart, columnEnd) => {
 // Содержимое файла с ошибкой
     let script_content = fs.readFileSync(fileName).toString().split('\n');
     
@@ -82,7 +122,7 @@ const errorlog = (message, fileName, lineNumber, columnNumber) => {
 // Строка #5
     if (script_content.length >= lineNumber5) {
         print5 =
-            colors.bgGreen(lineNumber5 + '. ') +
+            colors.bgGreen(lineNumber5+'. ') +
             colors.bgYellow(line5);
     }
     
@@ -93,7 +133,7 @@ const errorlog = (message, fileName, lineNumber, columnNumber) => {
             spaceNumber = ' ';
         }
         print4 =
-            colors.bgGreen(lineNumber4 + '. ' + spaceNumber) +
+            colors.bgGreen(lineNumber4+'. '+spaceNumber) +
             colors.bgYellow(line4);
     }
     
@@ -104,10 +144,15 @@ const errorlog = (message, fileName, lineNumber, columnNumber) => {
     
 // Строка #3 (строка с ошибкой)
     print3 =
-        colors.bgMagenta(lineNumber3 + '. ' + spaceNumber) +
-        colors.bgYellow(line3.substring(0, columnNumber)) +
-        colors.bgRed(line3.substring(columnNumber));
-        
+        colors.bgMagenta(lineNumber3+'. '+spaceNumber) +
+        colors.bgYellow(line3.substring(0, columnStart)) +
+        colors.bgRed(line3.substring(columnStart, columnEnd||undefined));
+
+// Если выделяемой строки есть конечная позиция
+    if (columnEnd) {
+        print3 += colors.bgYellow(line3.substring(columnEnd))
+    }
+    
 // Строка #3 (есть)
     if ((lineNumber2+'').length < (lineNumber3+'').length && print3 != '') {
         spaceNumber = ' ';
@@ -116,7 +161,7 @@ const errorlog = (message, fileName, lineNumber, columnNumber) => {
 // Строка #2
     if (lineNumber2 >= 1) {
         print2 =
-            colors.bgGreen(lineNumber2 + '. ' + spaceNumber) +
+            colors.bgGreen(lineNumber2+'. '+spaceNumber) +
             colors.bgYellow(line2);
     }
     
@@ -128,77 +173,116 @@ const errorlog = (message, fileName, lineNumber, columnNumber) => {
 // Строка #1
     if (lineNumber1 >= 1) {
         print1 =
-            colors.bgGreen(lineNumber1 + '. ' + spaceNumber) +
+            colors.bgGreen(lineNumber1+'. '+spaceNumber) +
             colors.bgYellow(line1);
     }
     
+// Лог
+    let log = '';
+    
 // Строка #1
     if (print1 != '') {
-        console.log(print1);
+        log += print1 + '\n';
     }
     
 // Строка #2
     if (print2 != '') {
-        console.log(print2);
+        log += print2 + '\n';
     }
     
 // Строка #3 (строка с ошибкой)
     if (print3 != '') {
-        console.log(print3);
+        log += print3 + '\n';
     }
     
 // Строка #4
     if (print4 != '') {
-        console.log(print4);
+        log += print4 + '\n';
     }
     
 // Строка #5
     if (print5 != '') {
-        console.log(print5);
+        log += print5;
     }
+    
+    return log;
 };
 
 /*--------------------------------------------------------------------------------------------------
 |
-| -> Экспорт
+| -> Выводит ошибку в консоль
 |
 |-------------------------------------------------------------------------------------------------*/
 
-module.exports = function(error) {
+const errorlog = (error, message, fileName, lineNumber, columnNumber) => {
+// Приводим к числу
+    lineNumber -= 0;
+    columnNumber -= 0;
+    
+// Лог
+    let log = '';
+    
+// Сообщение об ошибке
+    log += error_msg(message, fileName, error);
+    
+// Выделение ошибки в файле
+    log += highlight(fileName, lineNumber, columnNumber);
+    
+// Выводим в консоль
+    console.log(log + '\n');
+};
+
+/*--------------------------------------------------------------------------------------------------
+|
+| -> ErrorLog
+|
+|-------------------------------------------------------------------------------------------------*/
+
+module.exports = function(error, fileNoView) {
 // Ошибка
     let err = {
-        message: error.message
+        message: error.message.split('\n')[0]
     };
     
 // Стек ошибки
     let stack = stackTrace.parse(error);
     
-// Файл не указан (скорей всего это ошибка в промисах)
-    if (!stack[0].fileName) {
-        err.fileName = stack[1].fileName;
-        err.line = stack[1].lineNumber;
-        err.column = stack[1].columnNumber - 1;
-        errorlog(err.message, err.fileName, err.line, err.column);
-        return;
-    }
+// Фильтруем файлы из каталога "node_modules"
+    let files = {};
     
-// Файл указан, но его нет в текущей директории
-    if (fs.existsSync(stack[0].fileName)) {
-        err.fileName = stack[0].fileName;
-        err.line = stack[0].lineNumber;
-        err.column = stack[0].columnNumber - 1;
-        errorlog(err.message, err.fileName, err.line, err.column);
-        return;
+    for (let i = 0; i < stack.length; i++) {
+        if (fs.existsSync(stack[i]['fileName'])
+        &&  stack[i]['fileName'] != fileNoView) {
+            files[stack[i]['fileName']] = stack[i];
+        }
     }
     
 // Синтаксическая ошибка
-    err = {
-        message: error.toString().split(':')[1].substring(1),
-        fileName: error.stack.split('\n')[0].split(':')[0],
-        line: error.stack.split('\n')[0].split(':')[1],
-        column: error.stack.toString().split('\n')[2].split('^')[0].length
-    };
-    errorlog(err.message, err.fileName, err.line, err.column);
+    if (fs.existsSync(error.stack.split('\n')[0].split(':')[0])) {
+        err = {
+            message: error.toString().split(':')[1].substring(1),
+            fileName: error.stack.split('\n')[0].split(':')[0],
+            line: error.stack.split('\n')[0].split(':')[1],
+            column: error.stack.toString().split('\n')[2].split('^')[0].length
+        };
+        errorlog(error, err.message, err.fileName, err.line, err.column);
+        err.message = '';
+    }
+    
+// Остальные ошибки
+    for (let file in files) {
+        err.fileName = files[file].fileName;
+        err.line = files[file].lineNumber;
+        err.column = files[file].columnNumber - 1;
+        errorlog(error, err.message, err.fileName, err.line, err.column);
+        err.message = '';
+    }
 };
+
+// Сообщение об ошибке
+module.exports.msg = error_msg;
+
+// Выделение ошибки в файле
+module.exports.highlight = highlight;
 
 //--------------------------------------------------------------------------------------------------

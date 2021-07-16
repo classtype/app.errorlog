@@ -1,8 +1,3 @@
+var test = undefined;
 
-
-    if (currentHour < 12) {
-        console.log('Good morning!');
-    } else {
-        console.log('Good day!');
-    
-    
+test.value = 0;
