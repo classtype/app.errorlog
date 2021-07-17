@@ -238,7 +238,7 @@ const errorlog = (error, message, fileName, lineNumber, columnNumber) => {
 |
 |-------------------------------------------------------------------------------------------------*/
 
-module.exports = function(error, fileNoView) {
+module.exports = function(error, noViewFile, noViewOneFile) {
 // Ошибка
     let err = {
         message: error.message.split('\n')[0]
@@ -247,12 +247,25 @@ module.exports = function(error, fileNoView) {
 // Стек ошибки
     let stack = stackTrace.parse(error);
     
+// Размер цепочки файлов
+    let file_count = 0;
+    
+    for (let i = 0; i < stack.length; i++) {
+        if (fs.existsSync(stack[i]['fileName'])
+        &&  stack[i]['fileName'] != noViewFile) {
+            file_count++;
+        }
+    }
+    
 // Фильтруем файлы из каталога "node_modules"
     let files = {};
     
     for (let i = 0; i < stack.length; i++) {
         if (fs.existsSync(stack[i]['fileName'])
-        &&  stack[i]['fileName'] != fileNoView) {
+        &&  stack[i]['fileName'] != noViewFile
+        && (stack[i]['fileName'] != noViewOneFile
+        || (stack[i]['fileName'] == noViewOneFile && file_count == 1
+        && !fs.existsSync(error.stack.split('\n')[0].split(':')[0])))) {
             files[stack[i]['fileName']] = stack[i];
         }
     }
