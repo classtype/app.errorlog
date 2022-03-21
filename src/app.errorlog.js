@@ -88,19 +88,19 @@ const highlight = (fileName, lineNumber, columnStart, columnEnd) => {
     let script_content = fs.readFileSync(fileName).toString().split('\n');
     
 // Строка #1
-    let line1 = script_content[lineNumber - 3];
+    let line1 = script_content[lineNumber - 3]||'';
     
 // Строка #2
-    let line2 = script_content[lineNumber - 2];
+    let line2 = script_content[lineNumber - 2]||'';
     
 // Строка #3 (строка с ошибкой)
-    let line3 = script_content[lineNumber - 1];
+    let line3 = script_content[lineNumber - 1]||'';
     
 // Строка #4
-    let line4 = script_content[lineNumber + 0];
+    let line4 = script_content[lineNumber + 0]||'';
     
 // Строка #5
-    let line5 = script_content[lineNumber + 1];
+    let line5 = script_content[lineNumber + 1]||'';
     
 // Номера строки
     let lineNumber1 = lineNumber - 2;
@@ -147,7 +147,7 @@ const highlight = (fileName, lineNumber, columnStart, columnEnd) => {
         colors.bgMagenta(lineNumber3+'. '+spaceNumber) +
         colors.bgYellow(line3.substring(0, columnStart)) +
         colors.bgRed(line3.substring(columnStart, columnEnd||undefined));
-
+        
 // Если выделяемой строки есть конечная позиция
     if (columnEnd) {
         print3 += colors.bgYellow(line3.substring(columnEnd))
@@ -157,7 +157,7 @@ const highlight = (fileName, lineNumber, columnStart, columnEnd) => {
     if ((lineNumber2+'').length < (lineNumber3+'').length && print3 != '') {
         spaceNumber = ' ';
     }
-        
+    
 // Строка #2
     if (lineNumber2 >= 1) {
         print2 =
