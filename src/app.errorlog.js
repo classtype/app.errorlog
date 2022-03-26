@@ -54,7 +54,7 @@ const error_msg = (message, fileName, error) => {
 // Файл или каталог не найден
     if (message.substring(0, 33) == 'ENOENT: no such file or directory') {
         //let msg = message.split("'");
-        log += columns([
+        return columns([
             //['Ошибка:', msg[0].substring(0, msg[0].length - 1)+':'],
             ['Ошибка:', 'Файл или каталог не найден:'],
             [     '\n', "\n'"+message.split("'")[1]+"'"],
@@ -73,8 +73,6 @@ const error_msg = (message, fileName, error) => {
         color: ['red', 'black'],
         align: ['right', 'left']
     });
-    
-    return log;
 };
 
 /*--------------------------------------------------------------------------------------------------
