@@ -140,13 +140,18 @@ const highlight = (fileName, lineNumber, columnStart, columnEnd) => {
         spaceNumber = ' ';
     }
     
+// Если у выделяемой строки начальная позиция больше длины строки
+    if (columnStart >= line3.length) {
+        columnStart = 0;
+    }
+    
 // Строка #3 (строка с ошибкой)
     print3 =
         colors.bgMagenta(lineNumber3+'. '+spaceNumber) +
         colors.bgYellow(line3.substring(0, columnStart)) +
         colors.bgRed(line3.substring(columnStart, columnEnd||undefined));
         
-// Если выделяемой строки есть конечная позиция
+// Если у выделяемой строки есть конечная позиция
     if (columnEnd) {
         print3 += colors.bgYellow(line3.substring(columnEnd))
     }
@@ -236,7 +241,7 @@ const errorlog = (error, message, fileName, lineNumber, columnNumber) => {
 |
 |-------------------------------------------------------------------------------------------------*/
 
-module.exports = function(error, noViewFile, noViewOneFile) {
+module.exports = function(error, noViewFile) {
 // Ошибка
     let err = {
         message: error.message.split('\n')[0]
@@ -244,29 +249,6 @@ module.exports = function(error, noViewFile, noViewOneFile) {
     
 // Стек ошибки
     let stack = stackTrace.parse(error);
-    
-// Размер цепочки файлов
-    let file_count = 0;
-    
-    for (let i = 0; i < stack.length; i++) {
-        if (fs.existsSync(stack[i]['fileName'])
-        &&  stack[i]['fileName'] != noViewFile) {
-            file_count++;
-        }
-    }
-    
-// Фильтруем файлы из каталога "node_modules"
-    let files = {};
-    
-    for (let i = 0; i < stack.length; i++) {
-        if (fs.existsSync(stack[i]['fileName'])
-        &&  stack[i]['fileName'] != noViewFile
-        && (stack[i]['fileName'] != noViewOneFile
-        || (stack[i]['fileName'] == noViewOneFile && file_count == 1
-        && !fs.existsSync(error.stack.split('\n')[0].split(':')[0])))) {
-            files[stack[i]['fileName']] = stack[i];
-        }
-    }
     
 // Синтаксическая ошибка
     if (fs.existsSync(error.stack.split('\n')[0].split(':')[0])) {
@@ -281,12 +263,38 @@ module.exports = function(error, noViewFile, noViewOneFile) {
     }
     
 // Остальные ошибки
-    for (let file in files) {
-        err.fileName = files[file].fileName;
-        err.line = files[file].lineNumber;
-        err.column = files[file].columnNumber - 1;
-        errorlog(error, err.message, err.fileName, err.line, err.column);
-        err.message = '';
+    else {
+        let files = {};
+        
+        for (let i = 0; i < stack.length; i++) {
+            if (stack[i].fileName != noViewFile) {
+            // Фильтруем одинаковые строки в одном файле
+                if (!files[
+                    stack[i].fileName +''+
+                    stack[i].lineNumber +''+
+                    stack[i].columnNumber
+                ]) {
+                    if (fs.existsSync(stack[i].fileName)) {
+                        files[
+                            stack[i].fileName +''+
+                            stack[i].lineNumber +''+
+                            stack[i].columnNumber
+                        ] = true;
+                        err.fileName = stack[i].fileName;
+                        err.line = stack[i].lineNumber;
+                        err.column = stack[i].columnNumber - 1;
+                        errorlog(
+                            error,
+                            err.message,
+                            err.fileName,
+                            err.line,
+                            err.column
+                        );
+                        err.message = '';
+                    }
+                }
+            }
+        }
     }
 };
 

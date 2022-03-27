@@ -41,7 +41,7 @@ process.on('unhandledRejection', (error) => {
 // require('./016.js');        // Invalid or unexpected token
 // require('./017.js');        // Promise resolver undefined is not a function
 // require('./018.js');        // SyntaxError
-require('./019.js');           // Unexpected token }
-
+// require('./019.js');        // Unexpected token }
+require('./020.js');           // method_error
 
 //--------------------------------------------------------------------------------------------------
