@@ -242,6 +242,14 @@ const errorlog = (error, message, fileName, lineNumber, columnNumber) => {
 |-------------------------------------------------------------------------------------------------*/
 
 module.exports = function(error, noViewFile) {
+// Неизвестная ошибка
+    if (typeof error.message == 'undefined') {
+        let err = columns.col(['Неизвестная ошибка!']).join('');
+        console.log(err.substring(0, err.length-1));
+        console.log(error);
+        return;
+    }
+    
 // Ошибка
     let err = {
         message: error.message.split('\n')[0]

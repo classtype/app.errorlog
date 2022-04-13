@@ -1,11 +1,10 @@
 {
     "name": "app.errorlog",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "description": "Модуль для красивого вывода стека ошибок в консоль.",
     "contributors": [
         {
-            "name": "Sergei",
-            "email": "classtype@mail.ru"
+            "name": "Sergei"
         }
     ],
     "main": "src/app.errorlog.js",
